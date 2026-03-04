@@ -80,11 +80,11 @@ export default class AutoSpendingManager {
             return;
         }
         
-        if (this.player.playerName === 'TRAE宝' && this.visitedNPCs.size === 0) {
+        if (this.player.playerName === '小凡' && this.visitedNPCs.size === 0) {
             const baozhuQin = availableNPCs.find(npc => npc.npcName === '爆竹秦');
             if (baozhuQin) {
                 this.currentNPC = baozhuQin;
-                console.log(`[AutoSpendingManager] Player TRAE宝 first time, chose: 爆竹秦`);
+                console.log(`[AutoSpendingManager] Player 小凡 first time, chose: 爆竹秦`);
                 this.isDecidingNextNPC = false;
                 
                 if (this.currentNPC.isInteracting) {

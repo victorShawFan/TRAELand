@@ -342,7 +342,7 @@ export default class GameScene extends Phaser.Scene {
 
     createPlayers() {
         const playerNicknames = [
-            'TRAE宝', '豆包', '小华', '小丽', '小强',
+            '小凡', '豆包', '小华', '小丽', '小强',
             '小芳', '小军', '小燕', '小龙', '小凤'
         ];
         
@@ -683,6 +683,51 @@ export default class GameScene extends Phaser.Scene {
     }
 
     setupPlayerMovement() {
+        this.input.on('pointerdown', (pointer) => {
+            if (pointer.rightButtonDown() || this.isCameraDragging) {
+                return;
+            }
+            
+            if (!this.lockedPlayer) {
+                return;
+            }
+            
+            const worldX = pointer.worldX;
+            const worldY = pointer.worldY;
+            
+            const tileX = Math.floor(worldX / GAME_CONFIG.TILE_SIZE);
+            const tileY = Math.floor(worldY / GAME_CONFIG.TILE_SIZE);
+            
+            if (this.lockedPlayer.controlEnabled) {
+                const success = this.lockedPlayer.setPathTo(tileX, tileY);
+                if (success) {
+                    this.showClickMarker(worldX, worldY);
+                }
+            }
+        });
+    }
+
+    showClickMarker(x, y) {
+        if (this.clickMarker) {
+            this.clickMarker.destroy();
+        }
+        
+        this.clickMarker = this.add.graphics();
+        this.clickMarker.lineStyle(2, 0x00ff00, 1);
+        this.clickMarker.strokeCircle(0, 0, 10);
+        this.clickMarker.setPosition(x, y);
+        
+        this.tweens.add({
+            targets: this.clickMarker,
+            alpha: 0,
+            duration: 500,
+            onComplete: () => {
+                if (this.clickMarker) {
+                    this.clickMarker.destroy();
+                    this.clickMarker = null;
+                }
+            }
+        });
     }
 
     createAutoSpendingManagers() {
