@@ -695,6 +695,12 @@ export default class GameScene extends Phaser.Scene {
             const worldX = pointer.worldX;
             const worldY = pointer.worldY;
             
+            const clickedNPC = this.getClickedNPC(worldX, worldY);
+            if (clickedNPC) {
+                this.handleNPCClick(clickedNPC);
+                return;
+            }
+            
             const tileX = Math.floor(worldX / GAME_CONFIG.TILE_SIZE);
             const tileY = Math.floor(worldY / GAME_CONFIG.TILE_SIZE);
             
@@ -705,6 +711,64 @@ export default class GameScene extends Phaser.Scene {
                 }
             }
         });
+    }
+
+    getClickedNPC(worldX, worldY) {
+        const clickRadius = 32;
+        
+        for (const npc of this.npcs) {
+            const distance = Phaser.Math.Distance.Between(worldX, worldY, npc.x, npc.y);
+            if (distance < clickRadius) {
+                return npc;
+            }
+        }
+        
+        return null;
+    }
+
+    handleNPCClick(npc) {
+        if (!this.lockedPlayer) return;
+        
+        const distance = Phaser.Math.Distance.Between(
+            this.lockedPlayer.x, this.lockedPlayer.y,
+            npc.x, npc.y
+        );
+        
+        const interactionDistance = 150;
+        
+        if (distance < interactionDistance) {
+            const autoSpendingManager = this.lockedPlayer.autoSpendingManager;
+            if (autoSpendingManager && autoSpendingManager.isActive) {
+                if (!autoSpendingManager.currentNPC) {
+                    autoSpendingManager.currentNPC = npc;
+                    autoSpendingManager.startDialogue();
+                    console.log(`[GameScene] 点击NPC触发对话: ${npc.npcName}`);
+                }
+            }
+        } else {
+            const tileX = Math.floor(npc.x / GAME_CONFIG.TILE_SIZE);
+            const tileY = Math.floor(npc.y / GAME_CONFIG.TILE_SIZE);
+            
+            let targetTileX = tileX;
+            let targetTileY = tileY + 2;
+            
+            if (!this.isWalkable(targetTileX, targetTileY)) {
+                targetTileY = tileY - 2;
+                if (!this.isWalkable(targetTileX, targetTileY)) {
+                    targetTileX = tileX - 2;
+                    targetTileY = tileY;
+                    if (!this.isWalkable(targetTileX, targetTileY)) {
+                        targetTileX = tileX + 2;
+                    }
+                }
+            }
+            
+            const success = this.lockedPlayer.setPathTo(targetTileX, targetTileY);
+            if (success) {
+                this.showClickMarker(npc.x, npc.y);
+                console.log(`[GameScene] 走向NPC: ${npc.npcName}`);
+            }
+        }
     }
 
     showClickMarker(x, y) {
